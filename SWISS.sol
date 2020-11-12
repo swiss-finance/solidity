@@ -1,3 +1,7 @@
+/**
+ *Submitted for verification at Etherscan.io on 2020-11-12
+*/
+
 pragma solidity 0.6.11;
 
 // SPDX-License-Identifier: BSD-3-Clause
