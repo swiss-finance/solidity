@@ -1,20 +1,127 @@
-// SPDX-License-Identifier: MIT
-pragma solidity = 0.7.4;
+pragma solidity 0.6.11;
 
-//SWISS Protocol Contract
+// SPDX-License-Identifier: BSD-3-Clause
+
+// File: contracts\GSN\Context.sol
+
+
 
 /*
-     _______.____    __    ____  __       _______.     _______.   
-    /       |\   \  /  \  /   / |  |     /       |    /       |   
-   |   (----` \   \/    \/   /  |  |    |   (----`   |   (----`   
-    \   \      \            /   |  |     \   \        \   \       
-.----)   |      \    /\    /    |  | .----)   |   .----)   |      
-|_______/        \__/  \__/     |__| |_______/    |_______/       
-  
-                Oxygen#3333 => contact me
-*/
+ * @dev Provides information about the current execution context, including the
+ * sender of the transaction and its data. While these are generally available
+ * via msg.sender and msg.data, they should not be accessed in such a direct
+ * manner, since when dealing with GSN meta-transactions the account sending and
+ * paying for execution may not be the actual sender (as far as an application
+ * is concerned).
+ *
+ * This contract is only required for intermediate, library-like contracts.
+ */
+abstract contract Context {
+    function _msgSender() internal view virtual returns (address payable) {
+        return msg.sender;
+    }
+
+    function _msgData() internal view virtual returns (bytes memory) {
+        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
+        return msg.data;
+    }
+}
+
+// File: contracts\token\ERC20\IERC20.sol
 
 
+
+/**
+ * @dev Interface of the ERC20 standard as defined in the EIP.
+ */
+interface IERC20 {
+    /**
+     * @dev Returns the amount of tokens in existence.
+     */
+    function totalSupply() external view returns (uint256);
+
+    /**
+     * @dev Returns the amount of tokens owned by `account`.
+     */
+    function balanceOf(address account) external view returns (uint256);
+
+    /**
+     * @dev Moves `amount` tokens from the caller's account to `recipient`.
+     *
+     * Returns a boolean value indicating whether the operation succeeded.
+     *
+     * Emits a {Transfer} event.
+     */
+    function transfer(address recipient, uint256 amount) external returns (bool);
+
+    /**
+     * @dev Returns the remaining number of tokens that `spender` will be
+     * allowed to spend on behalf of `owner` through {transferFrom}. This is
+     * zero by default.
+     *
+     * This value changes when {approve} or {transferFrom} are called.
+     */
+    function allowance(address owner, address spender) external view returns (uint256);
+
+    /**
+     * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
+     *
+     * Returns a boolean value indicating whether the operation succeeded.
+     *
+     * IMPORTANT: Beware that changing an allowance with this method brings the risk
+     * that someone may use both the old and the new allowance by unfortunate
+     * transaction ordering. One possible solution to mitigate this race
+     * condition is to first reduce the spender's allowance to 0 and set the
+     * desired value afterwards:
+     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+     *
+     * Emits an {Approval} event.
+     */
+    function approve(address spender, uint256 amount) external returns (bool);
+
+    /**
+     * @dev Moves `amount` tokens from `sender` to `recipient` using the
+     * allowance mechanism. `amount` is then deducted from the caller's
+     * allowance.
+     *
+     * Returns a boolean value indicating whether the operation succeeded.
+     *
+     * Emits a {Transfer} event.
+     */
+    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+
+    /**
+     * @dev Emitted when `value` tokens are moved from one account (`from`) to
+     * another (`to`).
+     *
+     * Note that `value` may be zero.
+     */
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
+    /**
+     * @dev Emitted when the allowance of a `spender` for an `owner` is set by
+     * a call to {approve}. `value` is the new allowance.
+     */
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+}
+
+// File: contracts\math\SafeMath.sol
+
+
+
+/**
+ * @dev Wrappers over Solidity's arithmetic operations with added overflow
+ * checks.
+ *
+ * Arithmetic operations in Solidity wrap on overflow. This can easily result
+ * in bugs, because programmers usually assume that an overflow raises an
+ * error, which is the standard behavior in high level programming languages.
+ * `SafeMath` restores this intuition by reverting the transaction when an
+ * operation overflows.
+ *
+ * Using this library instead of the unchecked operations eliminates an entire
+ * class of bugs, so it's recommended to use it always.
+ */
 library SafeMath {
     /**
      * @dev Returns the addition of two unsigned integers, reverting on
@@ -28,13 +135,6 @@ library SafeMath {
      */
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a + b;
-        require(c >= a, "SafeMath: addition overflow");
-
-        return c;
-    }
-    
-    function add(int256 a, int256 b) internal pure returns (int256) {
-        int256 c = a + b;
         require(c >= a, "SafeMath: addition overflow");
 
         return c;
@@ -53,11 +153,6 @@ library SafeMath {
     function sub(uint256 a, uint256 b) internal pure returns (uint256) {
         return sub(a, b, "SafeMath: subtraction overflow");
     }
-    
-    function sub(int256 a, int256 b) internal pure returns (int256) {
-        return sub(a, b, "SafeMath: subtraction overflow");
-    }
-
 
     /**
      * @dev Returns the subtraction of two unsigned integers, reverting with custom message on
@@ -72,13 +167,6 @@ library SafeMath {
     function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
         require(b <= a, errorMessage);
         uint256 c = a - b;
-
-        return c;
-    }
-
-    function sub(int256 a, int256 b, string memory errorMessage) internal pure returns (int256) {
-        require(b <= a, errorMessage);
-        int256 c = a - b;
 
         return c;
     }
@@ -106,20 +194,6 @@ library SafeMath {
 
         return c;
     }
-    
-    function mul(int256 a, int256 b) internal pure returns (int256) {
-        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
-        // benefit is lost if 'b' is also tested.
-        // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
-        if (a == 0) {
-            return 0;
-        }
-
-        int256 c = a * b;
-        require(c / a == b, "SafeMath: multiplication overflow");
-
-        return c;
-    }
 
     /**
      * @dev Returns the integer division of two unsigned integers. Reverts on
@@ -134,10 +208,6 @@ library SafeMath {
      * - The divisor cannot be zero.
      */
     function div(uint256 a, uint256 b) internal pure returns (uint256) {
-        return div(a, b, "SafeMath: division by zero");
-    }
-    
-    function div(int256 a, int256 b) internal pure returns (int256) {
         return div(a, b, "SafeMath: division by zero");
     }
 
@@ -160,14 +230,6 @@ library SafeMath {
 
         return c;
     }
-    
-    function div(int256 a, int256 b, string memory errorMessage) internal pure returns (int256) {
-        require(b > 0, errorMessage);
-        int256 c = a / b;
-        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
-
-        return c;
-    }
 
     /**
      * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
@@ -185,10 +247,6 @@ library SafeMath {
         return mod(a, b, "SafeMath: modulo by zero");
     }
 
-    function mod(int256 a, int256 b) internal pure returns (int256) {
-        return mod(a, b, "SafeMath: modulo by zero");
-    }
-    
     /**
      * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
      * Reverts with custom message when dividing by zero.
@@ -205,426 +263,506 @@ library SafeMath {
         require(b != 0, errorMessage);
         return a % b;
     }
-    
-    function mod(int256 a, int256 b, string memory errorMessage) internal pure returns (int256) {
-        require(b != 0, errorMessage);
-        return a % b;
-    }
 }
 
-contract SWISS {
-    
-    using SafeMath for uint;
-    using SafeMath for int;
-    
-    string private constant _name = "Swiss";
-    string private constant _symbol = "SWISS";
+// File: contracts\token\ERC20\ERC20.sol
 
-    uint8 private constant _decimals = 18;
-    uint private constant _totalSupply = 10000000000000000000000;
-    
-    uint private _lastRewardAdmin;
-    uint private rewards_times = 0; // Reward step (0 - 4)
-    
-    // Fees
-    uint public tx_fees_swiss = 50; //2%
-    uint public tx_fees_decash = 100; //1%
-    
-    // Vote fees
-    struct voteInfo {
-        bool locked; // If the wallet can transfer / transferfrom
-        uint lastVoteIndex; // Last vote of the wallet
-        uint content; // Actual vote (1 or 2 <=> yes or no) of the wallet
-    }
 
-    mapping(address => voteInfo) voted;
 
-    uint public numberVote; // Number of votes casted
-    int public voteResult = 0; // The vote is accepted if result > 0
-    
-    uint public startVotingTime;
-    bool public inVoting;
-    uint public inVotingFees;
-    uint public inVotingType; // 1 = "SWISS" or 2 = "DeCash"
-    uint public voteTime = 259200; //3 days
 
-    event Approval(address indexed _owner, address indexed _spender, uint _value);
-    event Transfer(address indexed from, address indexed to, uint value);
-    event StartVote(uint indexed time, uint indexed fees, uint indexed typeFees); //fees : fees to vote
-    event EndVote( uint indexed typeFees, bool indexed approved); //approved : true = new_fees accepted
 
-    mapping(address => mapping (address => uint256)) allowed;
-    mapping(address => uint) public balances;
 
-    mapping (uint => address) public admin_wallets;
-    address public UNISWAP_ROUTER_ADDRESS;
-    address payable public fees_wallet_swiss; // Redirection wallet for liquidity for SWISS
-    address payable public fees_wallet_decash; // Redirection wallet for liquidity for DeCash
-    address payable public admin_locked_wallet; // Locked admin wallet (SWISS unlocked every week)
-    address payable public base_liquidity_wallet; // Wallet for liquidity on Uniswap
-    address payable public rewards_wallet; // Wallet for farming rewards
+/**
+ * @dev Implementation of the {IERC20} interface.
+ *
+ * This implementation is agnostic to the way tokens are created. This means
+ * that a supply mechanism has to be added in a derived contract using {_mint}.
+ * For a generic mechanism see {ERC20PresetMinterPauser}.
+ *
+ * TIP: For a detailed writeup see our guide
+ * https://forum.zeppelin.solutions/t/how-to-implement-erc20-supply-mechanisms/226[How
+ * to implement supply mechanisms].
+ *
+ * We have followed general OpenZeppelin guidelines: functions revert instead
+ * of returning `false` on failure. This behavior is nonetheless conventional
+ * and does not conflict with the expectations of ERC20 applications.
+ *
+ * Additionally, an {Approval} event is emitted on calls to {transferFrom}.
+ * This allows applications to reconstruct the allowance for all accounts just
+ * by listening to said events. Other implementations of the EIP may not emit
+ * these events, as it isn't required by the specification.
+ *
+ * Finally, the non-standard {decreaseAllowance} and {increaseAllowance}
+ * functions have been added to mitigate the well-known issues around setting
+ * allowances. See {IERC20-approve}.
+ */
+contract ERC20 is Context, IERC20 {
+    using SafeMath for uint256;
 
-    constructor(uint adminRewardTriggerTime) {
-        _lastRewardAdmin = block.timestamp + adminRewardTriggerTime; //Set the time of triggering (in seconde)
-        
-        UNISWAP_ROUTER_ADDRESS = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
-        
-        fees_wallet_swiss = 0x991AC37b1cBD28131560A8e9ddb4D51F4dBcb8c9;
-        fees_wallet_decash = 0xF033789a125545738D1ECCf0237083E62Ff21499;
-        admin_locked_wallet = 0xc5B83Fe842919Ac329F67e7dB7704625149d9e4E;
-        base_liquidity_wallet = 0x743d05c5A3354608037CA23761d2f9007D67029F;
-        rewards_wallet = 0x32ea698a6276939AD5eE1fABfFEa26a2391a785D;
+    mapping (address => uint256) private _balances;
 
-        //strategic, partenairs and founders' wallet :
-        
-        admin_wallets[0] = 0x973878Fa3A9439DFB27F7DD1C107Fd6D581bB2f2; // Organisation wallet 
-        admin_wallets[1] = 0x0C6F8C0F523A9AA348fE99a7f740ED0aE171D7C2; // Team number 1
-        admin_wallets[2] = 0x496079588149b6B019B36d1aCEf3b8FEE3C1613A; // Team number 2
-        admin_wallets[3] = 0x7B45ec5d1501a2e2aca6c40E99f04729C7EdA633; // Team number 3
-        admin_wallets[4] = 0x224F7803F9975c3a3bd64829db9908784fe52399; // Team number 4
-        admin_wallets[5] = 0x5F459581D117be275dA8408942a9C92F22d98b39; // Team number 5
-        admin_wallets[6] = 0x38cFfff72DcF64C3Fdbb66E23f7185Fb4769e01B; // Team number 6
-        admin_wallets[7] = 0xfe5408a38F0Afba44Fd5Ed77E34D0943E354264a; // Team number 7
-        admin_wallets[8] = 0xc17F69891407f3FD666E27c635F5d970a77b4A9F; // Team number 8
-        
-        balances[admin_locked_wallet] = 2500 * full_nb();
-        balances[base_liquidity_wallet] = 3500 * full_nb();
-        balances[rewards_wallet] = 4000 * full_nb();
-    }
-    
+    mapping (address => mapping (address => uint256)) private _allowances;
+
+    uint256 private _totalSupply;
+
+    string private _name;
+    string private _symbol;
+    uint8 private _decimals;
+
     /**
-     * 
-     * TOKEN BASEMENTS FUNCTIONS :
-     * 
+     * @dev Sets the values for {name} and {symbol}, initializes {decimals} with
+     * a default value of 18.
+     *
+     * To select a different value for {decimals}, use {_setupDecimals}.
+     *
+     * All three of these values are immutable: they can only be set once during
+     * construction.
      */
+    constructor (string memory name, string memory symbol) public {
+        _name = name;
+        _symbol = symbol;
+        _decimals = 18;
+    }
 
-    function name() public pure returns (string memory) {
+    /**
+     * @dev Returns the name of the token.
+     */
+    function name() public view returns (string memory) {
         return _name;
     }
 
-    function symbol() public pure returns (string memory) {
+    /**
+     * @dev Returns the symbol of the token, usually a shorter version of the
+     * name.
+     */
+    function symbol() public view returns (string memory) {
         return _symbol;
     }
 
-    function decimals() public pure returns (uint8) {
+    /**
+     * @dev Returns the number of decimals used to get its user representation.
+     * For example, if `decimals` equals `2`, a balance of `505` tokens should
+     * be displayed to a user as `5,05` (`505 / 10 ** 2`).
+     *
+     * Tokens usually opt for a value of 18, imitating the relationship between
+     * Ether and Wei. This is the value {ERC20} uses, unless {_setupDecimals} is
+     * called.
+     *
+     * NOTE: This information is only used for _display_ purposes: it in
+     * no way affects any of the arithmetic of the contract, including
+     * {IERC20-balanceOf} and {IERC20-transfer}.
+     */
+    function decimals() public view returns (uint8) {
         return _decimals;
     }
 
-    function totalSupply() public pure returns (uint256) {
+    /**
+     * @dev See {IERC20-totalSupply}.
+     */
+    function totalSupply() public view override returns (uint256) {
         return _totalSupply;
     }
 
-    function balanceOf(address account) public view returns (uint256) {
-        return balances[account];
+    /**
+     * @dev See {IERC20-balanceOf}.
+     */
+    function balanceOf(address account) public view override returns (uint256) {
+        return _balances[account];
+    }
+
+    /**
+     * @dev See {IERC20-transfer}.
+     *
+     * Requirements:
+     *
+     * - `recipient` cannot be the zero address.
+     * - the caller must have a balance of at least `amount`.
+     */
+    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+        _transfer(_msgSender(), recipient, amount);
+        return true;
+    }
+
+    /**
+     * @dev See {IERC20-allowance}.
+     */
+    function allowance(address owner, address spender) public view virtual override returns (uint256) {
+        return _allowances[owner][spender];
+    }
+
+    /**
+     * @dev See {IERC20-approve}.
+     *
+     * Requirements:
+     *
+     * - `spender` cannot be the zero address.
+     */
+    function approve(address spender, uint256 amount) public virtual override returns (bool) {
+        _approve(_msgSender(), spender, amount);
+        return true;
+    }
+
+    /**
+     * @dev See {IERC20-transferFrom}.
+     *
+     * Emits an {Approval} event indicating the updated allowance. This is not
+     * required by the EIP. See the note at the beginning of {ERC20}.
+     *
+     * Requirements:
+     *
+     * - `sender` and `recipient` cannot be the zero address.
+     * - `sender` must have a balance of at least `amount`.
+     * - the caller must have allowance for ``sender``'s tokens of at least
+     * `amount`.
+     */
+    function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
+        _transfer(sender, recipient, amount);
+        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
+        return true;
+    }
+
+    /**
+     * @dev Atomically increases the allowance granted to `spender` by the caller.
+     *
+     * This is an alternative to {approve} that can be used as a mitigation for
+     * problems described in {IERC20-approve}.
+     *
+     * Emits an {Approval} event indicating the updated allowance.
+     *
+     * Requirements:
+     *
+     * - `spender` cannot be the zero address.
+     */
+    function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
+        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
+        return true;
+    }
+
+    /**
+     * @dev Atomically decreases the allowance granted to `spender` by the caller.
+     *
+     * This is an alternative to {approve} that can be used as a mitigation for
+     * problems described in {IERC20-approve}.
+     *
+     * Emits an {Approval} event indicating the updated allowance.
+     *
+     * Requirements:
+     *
+     * - `spender` cannot be the zero address.
+     * - `spender` must have allowance for the caller of at least
+     * `subtractedValue`.
+     */
+    function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
+        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
+        return true;
+    }
+
+    /**
+     * @dev Moves tokens `amount` from `sender` to `recipient`.
+     *
+     * This is internal function is equivalent to {transfer}, and can be used to
+     * e.g. implement automatic token fees, slashing mechanisms, etc.
+     *
+     * Emits a {Transfer} event.
+     *
+     * Requirements:
+     *
+     * - `sender` cannot be the zero address.
+     * - `recipient` cannot be the zero address.
+     * - `sender` must have a balance of at least `amount`.
+     */
+    function _transfer(address sender, address recipient, uint256 amount) internal virtual {
+        require(sender != address(0), "ERC20: transfer from the zero address");
+        require(recipient != address(0), "ERC20: transfer to the zero address");
+
+        _beforeTokenTransfer(sender, recipient, amount);
+
+        _balances[sender] = _balances[sender].sub(amount, "ERC20: transfer amount exceeds balance");
+        _balances[recipient] = _balances[recipient].add(amount);
+        emit Transfer(sender, recipient, amount);
+    }
+
+    /** @dev Creates `amount` tokens and assigns them to `account`, increasing
+     * the total supply.
+     *
+     * Emits a {Transfer} event with `from` set to the zero address.
+     *
+     * Requirements:
+     *
+     * - `to` cannot be the zero address.
+     */
+    function _mint(address account, uint256 amount) internal virtual {
+        require(account != address(0), "ERC20: mint to the zero address");
+
+        _beforeTokenTransfer(address(0), account, amount);
+
+        _totalSupply = _totalSupply.add(amount);
+        _balances[account] = _balances[account].add(amount);
+        emit Transfer(address(0), account, amount);
+    }
+
+    /**
+     * @dev Destroys `amount` tokens from `account`, reducing the
+     * total supply.
+     *
+     * Emits a {Transfer} event with `to` set to the zero address.
+     *
+     * Requirements:
+     *
+     * - `account` cannot be the zero address.
+     * - `account` must have at least `amount` tokens.
+     */
+    function _burn(address account, uint256 amount) internal virtual {
+        require(account != address(0), "ERC20: burn from the zero address");
+
+        _beforeTokenTransfer(account, address(0), amount);
+
+        _balances[account] = _balances[account].sub(amount, "ERC20: burn amount exceeds balance");
+        _totalSupply = _totalSupply.sub(amount);
+        emit Transfer(account, address(0), amount);
+    }
+
+    /**
+     * @dev Sets `amount` as the allowance of `spender` over the `owner` s tokens.
+     *
+     * This internal function is equivalent to `approve`, and can be used to
+     * e.g. set automatic allowances for certain subsystems, etc.
+     *
+     * Emits an {Approval} event.
+     *
+     * Requirements:
+     *
+     * - `owner` cannot be the zero address.
+     * - `spender` cannot be the zero address.
+     */
+    function _approve(address owner, address spender, uint256 amount) internal virtual {
+        require(owner != address(0), "ERC20: approve from the zero address");
+        require(spender != address(0), "ERC20: approve to the zero address");
+
+        _allowances[owner][spender] = amount;
+        emit Approval(owner, spender, amount);
+    }
+
+    /**
+     * @dev Sets {decimals} to a value other than the default one of 18.
+     *
+     * WARNING: This function should only be called from the constructor. Most
+     * applications that interact with token contracts will not expect
+     * {decimals} to ever change, and may work incorrectly if it does.
+     */
+    function _setupDecimals(uint8 decimals_) internal {
+        _decimals = decimals_;
+    }
+
+    /**
+     * @dev Hook that is called before any transfer of tokens. This includes
+     * minting and burning.
+     *
+     * Calling conditions:
+     *
+     * - when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
+     * will be to transferred to `to`.
+     * - when `from` is zero, `amount` tokens will be minted for `to`.
+     * - when `to` is zero, `amount` of ``from``'s tokens will be burned.
+     * - `from` and `to` are never both zero.
+     *
+     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
+     */
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual { }
+}
+
+// File: contracts\token\ERC20\ERC20Burnable.sol
+
+
+
+
+
+/**
+ * @dev Extension of {ERC20} that allows token holders to destroy both their own
+ * tokens and those that they have an allowance for, in a way that can be
+ * recognized off-chain (via event analysis).
+ */
+abstract contract ERC20Burnable is Context, ERC20 {
+    /**
+     * @dev Destroys `amount` tokens from the caller.
+     *
+     * See {ERC20-_burn}.
+     */
+    function burn(uint256 amount) public virtual {
+        _burn(_msgSender(), amount);
+    }
+
+    /**
+     * @dev Destroys `amount` tokens from `account`, deducting from the caller's
+     * allowance.
+     *
+     * See {ERC20-_burn} and {ERC20-allowance}.
+     *
+     * Requirements:
+     *
+     * - the caller must have allowance for ``accounts``'s tokens of at least
+     * `amount`.
+     */
+    function burnFrom(address account, uint256 amount) public virtual {
+        uint256 decreasedAllowance = allowance(account, _msgSender()).sub(amount, "ERC20: burn amount exceeds allowance");
+
+        _approve(account, _msgSender(), decreasedAllowance);
+        _burn(account, amount);
+    }
+}
+
+/**
+ * @title Ownable
+ * @dev The Ownable contract has an owner address, and provides basic authorization control
+ * functions, this simplifies the implementation of "user permissions".
+ */
+contract Ownable {
+  address public owner;
+
+
+  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+
+  /**
+   * @dev The Ownable constructor sets the original `owner` of the contract to the sender
+   * account.
+   */
+  constructor() public {
+    owner = msg.sender;
+  }
+
+
+  /**
+   * @dev Throws if called by any account other than the owner.
+   */
+  modifier onlyOwner() {
+    require(msg.sender == owner);
+    _;
+  }
+
+
+  /**
+   * @dev Allows the current owner to transfer control of the contract to a newOwner.
+   * @param newOwner The address to transfer ownership to.
+   */
+  function transferOwnership(address newOwner) onlyOwner public {
+    require(newOwner != address(0));
+    emit OwnershipTransferred(owner, newOwner);
+    owner = newOwner;
+  }
+}
+
+
+interface tokenRecipient { 
+    function receiveApproval(address _from, uint256 _value, bytes calldata _extraData) external;
+}
+
+interface OldIERC20 {
+    function transfer(address to, uint amount) external;
+}
+
+contract SwissToken is ERC20Burnable, Ownable {
+    
+    address public fees_wallet_swiss = 0x991AC37b1cBD28131560A8e9ddb4D51F4dBcb8c9;
+    address public fees_wallet_decash = 0xF033789a125545738D1ECCf0237083E62Ff21499;
+    
+    uint public swissFeePercentX100 = 2e2;
+    uint public deshFeePercentX100 = 1e2;
+    
+    address public uniswap_pair_address;
+    
+    constructor(string memory name, string memory symbol, uint supply) public ERC20(name, symbol) {
+        _mint(_msgSender(), supply);
     }
     
-    function lastRewardAdmin() public view returns (uint256) {
-        return _lastRewardAdmin;
+    // owner is supposed to be a Swiss Governance Contract
+    function setSwissFeePercentX100(uint _swissFeePercentX100) public onlyOwner {
+        swissFeePercentX100 = _swissFeePercentX100;
+    }
+    function setDeshFeePercentX100(uint _deshFeePercentX100) public onlyOwner {
+        deshFeePercentX100 = _deshFeePercentX100;
+    }
+    function setSwissFeeWallet(address _fees_wallet_swiss) public onlyOwner {
+        fees_wallet_swiss = _fees_wallet_swiss;
+    }
+    function setDecashFeeWallet(address _fees_wallet_decash) public onlyOwner {
+        fees_wallet_decash = _fees_wallet_decash;
     }
     
-    function full_nb() public pure returns (uint) {
-        return 1000000000000000000; //18 zero for 18 decimals
+    function setUniswapPairAddress(address pairAddress) public onlyOwner {
+        require(uniswap_pair_address == address(0), "Pair already set!");
+        uniswap_pair_address = pairAddress;
     }
     
     /**
-     * 
-     * GOVERNANCE SYSTEM's FUNCTIONS :
-     * 
+     * @dev See {IERC20-transfer}.
+     *
+     * Requirements:
+     *
+     * - `recipient` cannot be the zero address.
+     * - the caller must have a balance of at least `amount`.
      */
-    
-    /**
-     * Vote for changing buy and sell fees
-     * 
-     *  Requirements :
-     *      -Vote in progress
-     *      -The voter has not yet voted
-     *      -vote is 1 or 2 :
-     * 
-     *      -vote : 1 is true (to accept proposal) and 2 is false (to reject proposal)
-     */
-     
-    function voteForFees(uint vote) public returns (bool) { 
-        require(inVoting == true, "No vote in progress");
-        require(voted[msg.sender].lastVoteIndex != numberVote, "Already voted");
-        require(vote == 1 || vote == 2); // 1 = yes, 2 = no
+    function transfer(address recipient, uint256 amount) public override returns (bool) {
         
-        voted[msg.sender].content = vote;
-        voted[msg.sender].locked = true;
-        voted[msg.sender].lastVoteIndex = numberVote;
-        
-        if (vote == 1) {
-            voteResult = voteResult.add(int(balances[msg.sender]));
+        if (_msgSender() == uniswap_pair_address || recipient == uniswap_pair_address) {
+            _transferWithFee(_msgSender(), recipient, amount);
+        } else {
+            _transfer(_msgSender(), recipient, amount);    
         }
-        else if (vote == 2) {
-            voteResult = voteResult.sub(int(balances[msg.sender]));
-        }
-        
-        return true;
-    }
-        
-    /**
-     * Remove Vote for changing buy and sell fees
-     * 
-     * The vote is remove and the tokens are unlock
-     * 
-     *  Requirements :
-     *      -Vote in progress
-     *      -The voter has already voted
-     */
-    
-    function unvoteForFees() public returns (bool) {
-        require(inVoting == true, "No vote in progress");
-        require(voted[msg.sender].lastVoteIndex == numberVote, "No vote registered");
-        
-        if (voted[msg.sender].content == 1) {
-            voteResult = voteResult.sub(int(balances[msg.sender]));
-        }
-        else if (voted[msg.sender].content == 2) {
-            voteResult = voteResult.add(int(balances[msg.sender]));
-        }
-        
-        voted[msg.sender].content = 0;
-        voted[msg.sender].locked = false;
-        voted[msg.sender].lastVoteIndex = 0;
         
         return true;
     }
     
     /**
-     * End a vote for changing buy and sell fees
-     * 
-     * The proposal is accepted if voteResult is more than 0
-     * 
-     *  Requirements :
-     *      -Vote in progress
-     *      -Voting time is over
+     * @dev See {IERC20-transferFrom}.
+     *
+     * Emits an {Approval} event indicating the updated allowance. This is not
+     * required by the EIP. See the note at the beginning of {ERC20}.
+     *
+     * Requirements:
+     *
+     * - `sender` and `recipient` cannot be the zero address.
+     * - `sender` must have a balance of at least `amount`.
+     * - the caller must have allowance for ``sender``'s tokens of at least
+     * `amount`.
      */
-     
-    function endVoting() public returns (bool) {
-        require(inVoting == true, "No vote in progress");
-        require(startVotingTime.add(voteTime) < block.timestamp, "Voting time is not over yet");
-        
-        if (voteResult > 0) {
-            if (inVotingType == 1) {
-                tx_fees_swiss = inVotingFees;
-            }
-            else {
-                tx_fees_decash = inVotingFees;
-            }
+    function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
+        if (sender == uniswap_pair_address || recipient == uniswap_pair_address) {
+            _transferWithFee(sender, recipient, amount);
+        } else {
+            _transfer(sender, recipient, amount);
         }
-        
-        inVotingType = 0;
-        inVotingFees = 0;
-        inVoting = false;
-        voteResult = 0;
-        
+        _approve(sender, _msgSender(), allowance(sender, _msgSender()).sub(amount, "ERC20: transfer amount exceeds allowance"));
         return true;
     }
     
-    /**
-     * Start a vote for changing buy and sell fees
-     * 
-     *  Requirements :
-     *      -No vote in progress
-     *      -The proponent have more than 100 SWISS
-     *      -VotingType is 1 or 2 :
-     * 
-     *      -VotingType : 1 is for SWISS Fees and 2 is for DeCash Fees
-     *      -newFees : amount of the Fees if the proposal is accepted
-     */
-     
-    function startVoting(uint VotingType, uint newFees) public returns (bool) {
-        require(inVoting == false, "Vote already in progress");
-        require(balances[msg.sender] > uint(100).mul(full_nb()), "You need to have more than 100 SWISS to start a vote");
-        require(VotingType == 1 || VotingType == 2); // 1 = Vote for SWISS; 2 = Vote for DeCash
+    function _transferWithFee(address sender, address recipient, uint256 amount) internal {
+        uint swissFee = amount.mul(swissFeePercentX100).div(100e2);
+        uint deshFee = amount.mul(deshFeePercentX100).div(100e2);
+        uint amountAfterFee = amount.sub(swissFee).sub(deshFee);
         
-        startVotingTime = block.timestamp;
-        inVotingType = VotingType;
-        inVotingFees = newFees;
-        inVoting = true;
-        numberVote++;
-        
-        return true;
+        _transfer(sender, fees_wallet_swiss, swissFee);
+        _transfer(sender, fees_wallet_decash, deshFee);
+        _transfer(sender, recipient, amountAfterFee);
     }
     
-    // Return Voting type and the new fees being voted on (0, 0 for no Voting)
-    function getCurrenVote() public view returns (uint, uint) {
-        return (inVotingType, inVotingFees);
-    }
     
-    /**
-     * 
-     * ERC BASEMENTS FUNCTIONS :
-     * 
-     */
-  
-    function approve(address _spender, uint256 _amount) public returns (bool success) {
-        allowed[msg.sender][_spender] = _amount;
-
-        emit Approval(msg.sender, _spender, _amount);
-        return true;
-    }
-    
-    function allowance(address owner, address spender) public view returns (uint256) {
-        return allowed[owner][spender];
-    }
-    
-    function transfer(address _to, uint _value) public returns (bool success) {
-        require(_to != msg.sender);
-        require(balances[msg.sender] >= _value, "Don't have enought SWISS");
-        require(_value > 0, "Need to send more than O Swiss");
-        require(msg.sender != admin_locked_wallet);
-        require(voted[msg.sender].locked == false || (voted[msg.sender].locked == true && voted[msg.sender].lastVoteIndex != numberVote), "Tokens are locked by the vote");
-
-        balances[msg.sender] = balances[msg.sender].sub(_value);
-        if (msg.sender == UNISWAP_ROUTER_ADDRESS || _to == UNISWAP_ROUTER_ADDRESS) { // Take fees only on selling and buying
-        
-            uint sub_value_swiss = _value.div(tx_fees_swiss);
-            uint sub_value_decash = _value.div(tx_fees_decash);
-            _value = _value.sub(sub_value_swiss.add(sub_value_decash));
-            
-            //Redirection for the SWISS wallet : 
-            balances[fees_wallet_swiss] = balances[fees_wallet_swiss].add(sub_value_swiss);
-            emit Transfer(msg.sender, fees_wallet_swiss, sub_value_swiss);
-
-            //Redirection for the DECASH wallet :
-            balances[fees_wallet_decash] = balances[fees_wallet_decash].add(sub_value_decash); 
-            emit Transfer(msg.sender, fees_wallet_decash, sub_value_decash);
+    function approveAndCall(address _spender, uint256 _value, bytes calldata _extraData)
+        external
+        returns (bool success) 
+    {
+        tokenRecipient spender = tokenRecipient(_spender);
+        if (approve(_spender, _value)) {
+            spender.receiveApproval(msg.sender, _value, _extraData);
+            return true;
         }
-
-        
-        balances[_to] = balances[_to].add(_value); 
-
-        
-        emit Transfer(msg.sender, _to, _value);
-        return true;
     }
     
-    function transferFrom(address _from, address _to, uint _value) public returns (bool success) {
-        require(_to != _from);
-        require(balances[_from] >= _value, "Don't have enough SWISS");
-        require(_value >= 0, "Need to send more than O Swiss");
-        require(allowed[_from][msg.sender] >= _value, "Don't have enough allowance");
-        require(_from != admin_locked_wallet);
-        require(voted[_from].locked == false, "Tokens are locked by the vote");
-
-        allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
-        balances[_from] = balances[_from].sub(_value);
-
-        if (_from == UNISWAP_ROUTER_ADDRESS || _to == UNISWAP_ROUTER_ADDRESS) { // Take fees only on selling and buying
-        
-            uint sub_value_swiss = _value.div(tx_fees_swiss);
-            uint sub_value_decash = _value.div(tx_fees_decash);
-            _value = _value.sub(sub_value_swiss.add(sub_value_decash));
-            
-            //Redirection for the SWISS wallet : 
-            balances[fees_wallet_swiss] = balances[fees_wallet_swiss].add(sub_value_swiss);
-            emit Transfer(_from, fees_wallet_swiss, sub_value_swiss);
-        
-            //Redirection for the DECASH wallet :
-            balances[fees_wallet_decash] = balances[fees_wallet_decash].add(sub_value_decash); 
-            emit Transfer(_from, fees_wallet_decash, sub_value_decash);
-        }
-        
-        balances[_to] = balances[_to].add(_value); 
-
-        
-        emit Transfer(_from, _to, _value);
-        return true;
-    }
     
-    function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
-        approve(spender, allowed[msg.sender][spender].add(addedValue));
-        return true;
+    function transferAnyERC20Token(address _tokenAddress, address _to, uint _amount) public onlyOwner {
+        IERC20(_tokenAddress).transfer(_to, _amount);
     }
-
-    function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
-        approve(spender, allowed[msg.sender][spender].sub(subtractedValue));
-        return true;
+    function transferAnyOldERC20Token(address _tokenAddress, address _to, uint _amount) public onlyOwner {
+        OldIERC20(_tokenAddress).transfer(_to, _amount);
     }
-    
-    /**
-     * 
-     * ADMIN REWARD UNLOCKING FUNCTION :
-     * 
-     */
-
-    function adminRewards() public {
-        require(rewards_times <= 4);
-        
-        // reward D+1 after lunching :
-        if (rewards_times == 0) { if (lastRewardAdmin() + 86400 <= block.timestamp) { 
-            
-            balances[admin_wallets[0]] = balances[admin_wallets[0]].add(200 * full_nb()); 
-            
-            balances[admin_locked_wallet] = balances[admin_locked_wallet].sub(200 * full_nb());
-            
-            rewards_times = rewards_times.add(1); 
-            _lastRewardAdmin = block.timestamp; } }
-            
-        else {
-        
-        if (lastRewardAdmin() + 604800 <= block.timestamp) { //604800 = 1 week
-        
-            // reward D+7 after lunching :
-            if (rewards_times == 1) {   balances[admin_wallets[0]] = balances[admin_wallets[0]].add(70 * full_nb());
-                                        balances[admin_wallets[1]] = balances[admin_wallets[1]].add(180 * full_nb());
-                                        balances[admin_wallets[2]] = balances[admin_wallets[2]].add(180 * full_nb());
-                                        balances[admin_wallets[3]] = balances[admin_wallets[3]].add(30 * full_nb()); 
-                                        balances[admin_wallets[4]] = balances[admin_wallets[4]].add(30 * full_nb());
-                                        balances[admin_wallets[5]] = balances[admin_wallets[5]].add(25 * full_nb());
-                                        balances[admin_wallets[6]] = balances[admin_wallets[6]].add(3 * full_nb());
-                                        balances[admin_wallets[7]] = balances[admin_wallets[7]].add(65 * full_nb());
-                                        balances[admin_wallets[8]] = balances[admin_wallets[8]].add(65 * full_nb());
-                
-                                        balances[admin_locked_wallet] = balances[admin_locked_wallet].sub(648 * full_nb());}
-                                        
-            // reward D+14 after lunching :
-            if (rewards_times == 2) {   balances[admin_wallets[0]] = balances[admin_wallets[0]].add(50 * full_nb());
-                                        balances[admin_wallets[1]] = balances[admin_wallets[1]].add(180 * full_nb());
-                                        balances[admin_wallets[2]] = balances[admin_wallets[2]].add(180 * full_nb());
-                                        balances[admin_wallets[3]] = balances[admin_wallets[3]].add(30 * full_nb()); 
-                                        balances[admin_wallets[4]] = balances[admin_wallets[4]].add(30 * full_nb());
-                                        balances[admin_wallets[5]] = balances[admin_wallets[5]].add(25 * full_nb());
-                                        balances[admin_wallets[6]] = balances[admin_wallets[6]].add(3 * full_nb());
-                                        balances[admin_wallets[7]] = balances[admin_wallets[7]].add(65 * full_nb());
-                                        balances[admin_wallets[8]] = balances[admin_wallets[8]].add(65 * full_nb());
-                                        
-                                        balances[admin_locked_wallet] = balances[admin_locked_wallet].sub(628 * full_nb());}
-                                        
-            // reward D+21 after lunching :
-            if (rewards_times == 3) {   balances[admin_wallets[0]] = balances[admin_wallets[0]].add(50 * full_nb());
-                                        balances[admin_wallets[1]] = balances[admin_wallets[1]].add(160 * full_nb());
-                                        balances[admin_wallets[2]] = balances[admin_wallets[2]].add(160 * full_nb());
-                                        balances[admin_wallets[3]] = balances[admin_wallets[3]].add(25 * full_nb()); 
-                                        balances[admin_wallets[4]] = balances[admin_wallets[4]].add(25 * full_nb());
-                                        balances[admin_wallets[5]] = balances[admin_wallets[5]].add(20 * full_nb());
-                                        balances[admin_wallets[6]] = balances[admin_wallets[6]].add(2 * full_nb());
-                                        balances[admin_wallets[7]] = balances[admin_wallets[7]].add(55 * full_nb());
-                                        balances[admin_wallets[8]] = balances[admin_wallets[8]].add(55 * full_nb());
-                                        
-                                        balances[admin_locked_wallet] = balances[admin_locked_wallet].sub(552 * full_nb());}
-                                        
-            // reward D+28 after lunching :
-            if (rewards_times == 4) {   balances[admin_wallets[0]] = balances[admin_wallets[0]].add(40 * full_nb());
-                                        balances[admin_wallets[1]] = balances[admin_wallets[1]].add(150 * full_nb());
-                                        balances[admin_wallets[2]] = balances[admin_wallets[2]].add(150 * full_nb());
-                                        balances[admin_wallets[3]] = balances[admin_wallets[3]].add(20 * full_nb()); 
-                                        balances[admin_wallets[4]] = balances[admin_wallets[4]].add(20 * full_nb());
-                                        balances[admin_wallets[5]] = balances[admin_wallets[5]].add(10 * full_nb());
-                                        balances[admin_wallets[6]] = balances[admin_wallets[6]].add(2 * full_nb());
-                                        balances[admin_wallets[7]] = balances[admin_wallets[7]].add(40 * full_nb());
-                                        balances[admin_wallets[8]] = balances[admin_wallets[8]].add(40 * full_nb());
-                                        
-                                        balances[admin_locked_wallet] = balances[admin_locked_wallet].sub(472 * full_nb());}
-
-            rewards_times = rewards_times.add(1); 
-            _lastRewardAdmin = block.timestamp; 
-            
-            }
-        
-        } 
-        
-    }
-
 }
